@@ -11,7 +11,7 @@ from os.path import exists
 from os.path import join
 from time import localtime
 from types import MethodType
-from typing import Union, IO
+from typing import Union, IO, Iterable
 from urllib.parse import urljoin
 
 import requests
@@ -101,6 +101,92 @@ def init_logger(log_dir='log', level=logging.DEBUG) -> logging.Logger:
 logger = init_logger()
 
 
+class JsonFile:
+
+    def __init__(self, file: IO, obj: dict = None, overwrite=True, indent=4):
+        """Json与文件同步序列化
+        注意不要使用此构造方法,应当使用工厂方法
+
+        :param file: 一个文件流
+        :param obj: 一个字典
+        :param indent: tab的长度
+        """
+        if not file.writable():
+            raise IOError('文件不可写<{}>'.format(file.name))
+        if not file.seekable():
+            raise IOError('文件不可查<{}>'.format(file.name))
+        if not file.readable():
+            raise IOError('文件不可读<{}>'.format(file.name))
+        self.f = file
+        self.obj = obj
+        self.indent = indent
+
+    @classmethod
+    def from_newfile(cls, filename, mode='w', encoding='utf8'):
+        f = open(filename, mode=mode, encoding=encoding)
+        return cls(f, {})
+
+    @classmethod
+    def from_filename(cls, filename, mode='r+', encoding='utf8'):
+        f = open(filename, mode=mode, encoding=encoding)
+        c = cls(f)
+        c.load(f)
+        return c
+
+    @classmethod
+    def from_streaming(cls, streaming):
+        c = cls(streaming, {})
+        return c
+
+    def keys(self) -> Iterable:
+        return self.obj.keys()
+
+    def items(self) -> (Iterable, Iterable):
+        return self.items()
+
+    def __len__(self) -> int:
+        return self.obj.__len__()
+
+    def __setitem__(self, k, v):
+        return self.obj.__setitem__(k, v)
+
+    def __getitem__(self, k):
+        return self.obj.__getitem__(k)
+
+    def __delitem__(self, v):
+        return self.obj.__delitem__(v)
+
+    def __str__(self) -> str:
+        return super().__str__()
+
+    def load(self, streaming: IO):
+        self.obj = json.load(streaming)
+
+    def dump(self):
+        self.f.seek(0)
+        json.dump(self.obj, self.f, indent=4)
+
+    def close(self):
+        self.dump()
+        self.f.close()
+
+
+def test_json_file():
+    # res = ResourceRoot('resource')
+    # f = res['test_json_file.json']
+    # obj = {'data': [1, 23]}
+    # jf = JsonFile(f, obj)
+    # jf['data'] = '1'
+    # jf.close()
+    test_json2()
+
+
+def test_json2():
+    jf2 = JsonFile.from_filename('resources/testjson2.json')
+    jf2['title'] = 'changed testjson2'
+    jf2.close()
+
+
 # todo 管理文件
 # 考虑使用`property`
 class ResourceRoot:
@@ -112,7 +198,14 @@ class ResourceRoot:
         dir_names = [_dir for _dir in filter(lambda name: os.path.isdir(name), self.list_dir)]
         self.dirs = {dir_name: ResourceRoot(dir_name) for dir_name in dir_names}
 
-    def __init__(self, root_dir, chuck=2048, mode='r+', encoding='utf8'):
+    def __init__(self, root_dir='resources', chuck=2048, mode='r+', encoding='utf8'):
+        """把一个文件夹抽象成一个类,可以保存和读取资源文件
+
+        :param root_dir: 默认为`resources`
+        :param chuck: 默认读取写入的区块
+        :param mode: 文件打开模式  默认`r+`
+        :param encoding: 文件编码  默认`utf8`
+        """
         self.rel_root_dir = root_dir
         self.chuck = chuck
         self.root_dir = os.path.abspath(root_dir)
@@ -131,14 +224,16 @@ class ResourceRoot:
         self.scan()
 
     # todo 支持数字下标
-    def __getitem__(self, name: str):
+    def __getitem__(self, name: str) -> IO:
+        name = join(self.root_dir, name)
         if name in self.files.keys():
-            if self.files[name] is None:
+            if self.files[name] is None or self.files[name].closed:
                 self.files[name] = open(name, self.mode, encoding=self.encoding)
             return self.files[name]
-
         elif name in self.dirs.keys():
             return self.dirs[name]
+        else:
+            raise KeyError('不存在此文件')
 
     # todo 可以设置`ResourceRoot`
     def __setitem__(self, filename: str, value: Union[str, IO]):
@@ -155,11 +250,19 @@ class ResourceRoot:
         # return '<ResourceRoot root_dir=\'{}\'>'.format(self.root_dir)
         return '<ResourceRoot {!r}>'.format(self.list_dir)
 
-    def save(self, filename, streaming: Union[str, IO], **kwargs):
-        """传入文件名,和一个流或者字符串,保存文件后,流将被关闭"""
+    def save(self, filename, streaming: Union[str, IO, dict], **kwargs):
+        """传入文件名,和一个流或者字符串,保存文件后,流将被关闭
+
+        :param filename: 文件名你要保存在这个`ResourceRoot`下的
+        :param streaming: 它可能是一个`str`对象, 或者`IO`流对象, 或者是一个`dict`字典,如果传入`dict`则会被转换成`json`文本保存
+        """
         f = open(join(self.root_dir, filename),
                  mode=kwargs.get('mode', 'w'),
                  encoding=kwargs.get('encoding', self.encoding))
+        # 把字典转换为字符串
+        if isinstance(streaming, dict):
+            streaming = json.dumps(streaming, indent=4)
+        # 把字符串转换为流
         if not isinstance(streaming, io.IOBase):
             streaming = io.StringIO(streaming)
         for chuck in streaming.read(self.chuck):
@@ -413,8 +516,10 @@ class Spider:
 def test_resource():
     res = ResourceRoot('resource')
     logger.debug('list_dir: {}', res)
-    res.save('test', 'hello')
-    f = res[0]
+    res['streaming.txt'] = 'streaming.txt'
+    res.save('test_json', {'date': ['t', 'e', 's', 't']})
+    # f.seek(0)
+    # print(f.read())
     pass
 
 
@@ -428,4 +533,4 @@ def test_spider():
 
 
 if __name__ == '__main__':
-    test_resource()
+    test_json_file()

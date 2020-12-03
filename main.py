@@ -6,6 +6,7 @@ import datetime
 import requests
 
 from spider import Spider
+from spider.spider import JsonFile
 
 headers = {
     "Connection": 'keep-alive',
@@ -65,12 +66,13 @@ def get_question_answers(answer_url):
 if __name__ == '__main__':
     _dir_ids = [68773828, 68773829, 68773832, 68773852, 68773853, 68773855, 68773856]
     f = open('out/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.json', 'w+', encoding='utf8')
-    out_json = {'data': []}
+    json_file = JsonFile.from_streaming(f)
+    json_file['data'] = []
     for _dir_id in _dir_ids:
         _exam_id = get_exam_id(_dir_id)
         logger.info("======爬取id为 [{}] 的考试======", _exam_id)
         _answer_url = get_answer_url(_exam_id)
         qa = get_question_answers(_answer_url)
-        out_json['data'] += qa
-        logger.info('共 {} 个items', len(out_json['data']))
-    json.dump(out_json, f, ensure_ascii=False)
+        json_file['data'] += qa
+        logger.info('共 {} 个items', len(json_file['data']))
+    json_file.close()
