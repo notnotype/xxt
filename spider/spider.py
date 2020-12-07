@@ -1,20 +1,22 @@
 import datetime
+import io
 import json
 import logging
 import os
 import pickle
 import re
+import shutil
 import uuid
-import io
 from json import load, dump, loads
 from os.path import exists
 from os.path import join
 from time import localtime
 from types import MethodType
-from typing import Union, IO, Iterable
+from typing import Union, IO
 from urllib.parse import urljoin
 
 import requests
+from fake_useragent import UserAgent
 from lxml.etree import HTML
 
 
@@ -35,8 +37,8 @@ def limit_text(s: str, max_len):
 
 def elem_tostring(elem):
     """HTML元素转换成字符串"""
-    elems_text_nodes = elem.xpath(".//text()")
-    beautiful_text = ''.join([elem.strip() for elem in elems_text_nodes])
+    elem_text_nodes = elem.xpath(".//text()")
+    beautiful_text = ''.join([elem.strip() for elem in elem_text_nodes])
     return beautiful_text
 
 
@@ -58,7 +60,6 @@ class FormatFilter(logging.Filter):
         return True
 
 
-# todo logger到底怎么用啊
 # todo 继承`StreamHandler`实现详细`log`与精简`log`
 # todo 记录错误单独保存文件
 def init_logger(log_dir='log', level=logging.DEBUG) -> logging.Logger:
@@ -101,96 +102,17 @@ def init_logger(log_dir='log', level=logging.DEBUG) -> logging.Logger:
 logger = init_logger()
 
 
-class JsonFile:
+class ResourceBase:
+    """ResourceRoot的无意义基类"""
 
-    def __init__(self, file: IO, obj: dict = None, overwrite=True, indent=4):
-        """Json与文件同步序列化
-        注意不要使用此构造方法,应当使用工厂方法
-
-        :param file: 一个文件流
-        :param obj: 一个字典
-        :param indent: tab的长度
-        """
-        if not file.writable():
-            raise IOError('文件不可写<{}>'.format(file.name))
-        if not file.seekable():
-            raise IOError('文件不可查<{}>'.format(file.name))
-        if not file.readable():
-            raise IOError('文件不可读<{}>'.format(file.name))
-        self.f = file
-        self.obj = obj
-        self.indent = indent
-
-    @classmethod
-    def from_newfile(cls, filename, mode='w', encoding='utf8'):
-        f = open(filename, mode=mode, encoding=encoding)
-        return cls(f, {})
-
-    @classmethod
-    def from_filename(cls, filename, mode='r+', encoding='utf8'):
-        f = open(filename, mode=mode, encoding=encoding)
-        c = cls(f)
-        c.load(f)
-        return c
-
-    @classmethod
-    def from_streaming(cls, streaming):
-        c = cls(streaming, {})
-        return c
-
-    def keys(self) -> Iterable:
-        return self.obj.keys()
-
-    def items(self) -> (Iterable, Iterable):
-        return self.items()
-
-    def __len__(self) -> int:
-        return self.obj.__len__()
-
-    def __setitem__(self, k, v):
-        return self.obj.__setitem__(k, v)
-
-    def __getitem__(self, k):
-        return self.obj.__getitem__(k)
-
-    def __delitem__(self, v):
-        return self.obj.__delitem__(v)
-
-    def __str__(self) -> str:
-        return super().__str__()
-
-    def load(self, streaming: IO):
-        self.obj = json.load(streaming)
-
-    def dump(self):
-        self.f.seek(0)
-        json.dump(self.obj, self.f, indent=4)
-
-    def close(self):
-        self.dump()
-        self.f.close()
+    def serialize_as_folder(self, path):
+        pass
 
 
-def test_json_file():
-    # res = ResourceRoot('resource')
-    # f = res['test_json_file.json']
-    # obj = {'data': [1, 23]}
-    # jf = JsonFile(f, obj)
-    # jf['data'] = '1'
-    # jf.close()
-    test_json2()
-
-
-def test_json2():
-    jf2 = JsonFile.from_filename('resources/testjson2.json')
-    jf2['title'] = 'changed testjson2'
-    jf2.close()
-
-
-# todo 管理文件
 # 考虑使用`property`
-class ResourceRoot:
+class ResourceRoot(ResourceBase):
     def scan(self):
+        """扫描当前文件夹, 更新`list_dir`, `files`, `dirs`"""
         self.list_dir = list(map(lambda name: join(self.root_dir, name), os.listdir(self.root_dir)))
 
         file_names = list(filter(lambda name: os.path.isfile(name), self.list_dir))
@@ -201,10 +123,10 @@ class ResourceRoot:
     def __init__(self, root_dir='resources', chuck=2048, mode='r+', encoding='utf8'):
         """把一个文件夹抽象成一个类,可以保存和读取资源文件
 
-        :param root_dir: 默认为`resources`
-        :param chuck: 默认读取写入的区块
-        :param mode: 文件打开模式  默认`r+`
-        :param encoding: 文件编码  默认`utf8`
+        :key root_dir: 默认为`resources`
+        :key chuck: 默认读取写入的区块
+        :key mode: 文件打开模式  默认`r+`
+        :key encoding: 文件编码  默认`utf8`
         """
         self.rel_root_dir = root_dir
         self.chuck = chuck
@@ -223,7 +145,6 @@ class ResourceRoot:
 
         self.scan()
 
-    # todo 支持数字下标
     def __getitem__(self, name: str) -> IO:
         name = join(self.root_dir, name)
         if name in self.files.keys():
@@ -235,8 +156,7 @@ class ResourceRoot:
         else:
             raise KeyError('不存在此文件')
 
-    # todo 可以设置`ResourceRoot`
-    def __setitem__(self, filename: str, value: Union[str, IO]):
+    def __setitem__(self, filename: str, value: Union[str, IO, dict, ResourceBase]):
         """默认调用`self.save`"""
         self.save(filename, value)
 
@@ -250,37 +170,55 @@ class ResourceRoot:
         # return '<ResourceRoot root_dir=\'{}\'>'.format(self.root_dir)
         return '<ResourceRoot {!r}>'.format(self.list_dir)
 
-    def save(self, filename, streaming: Union[str, IO, dict], **kwargs):
-        """传入文件名,和一个流或者字符串,保存文件后,流将被关闭
+    def serialize_as_folder(self, path):
+        """把自己的一个复制复制到一个位置"""
+        shutil.copytree(self.rel_root_dir, os.path.realpath(path))
 
-        :param filename: 文件名你要保存在这个`ResourceRoot`下的
-        :param streaming: 它可能是一个`str`对象, 或者`IO`流对象, 或者是一个`dict`字典,如果传入`dict`则会被转换成`json`文本保存
+    def save(self, name, value: Union[str, IO, dict, ResourceBase], **kwargs):
+        """传入文件名,和一个`流`, 或者`字符串`, 或者`ResourceRoot`, 保存文件后,流将被关闭
+
+        :param name: 文件名你要保存在这个`ResourceRoot`下的
+        :param value: 它可能是一个`str`对象, 或者`IO`流对象, 或者是一个`dict`字典,如果传入`dict`则会被转换成`json`文本保存
         """
-        f = open(join(self.root_dir, filename),
-                 mode=kwargs.get('mode', 'w'),
-                 encoding=kwargs.get('encoding', self.encoding))
-        # 把字典转换为字符串
-        if isinstance(streaming, dict):
-            streaming = json.dumps(streaming, indent=4)
-        # 把字符串转换为流
-        if not isinstance(streaming, io.IOBase):
-            streaming = io.StringIO(streaming)
-        for chuck in streaming.read(self.chuck):
-            f.write(chuck)
-        f.close()
-        streaming.close()
-        logger.debug('保存文件[{}]', join(self.root_dir, filename))
+        # 如果是 `ResourceBase` 类
+        if isinstance(value, ResourceBase):
+            value.serialize_as_folder(join(self.root_dir, name))
+            logger.debug('保存目录成功[{}]', join(self.root_dir, name))
+        else:  # 是字符串或流
+            f = open(join(self.root_dir, name),
+                     mode=kwargs.get('mode', 'w'),
+                     encoding=kwargs.get('encoding', self.encoding))
+            # 把字典转换为字符串
+            if isinstance(value, dict):
+                value = json.dumps(value, indent=4, ensure_ascii=False)
+            # 把字符串转换为流
+            if not isinstance(value, io.IOBase):
+                value = io.StringIO(value)
+            # for chuck in streaming.read(self.chuck):
+            #     f.write(chuck)
+            f.write(value.read())
+            f.close()
+            value.close()
+            logger.debug('保存文件成功[{}]', join(self.root_dir, name))
 
 
-def get_headers():
-    return {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)'
-                          ' Chrome/86.0.4240.198 Safari/537.36'}
+def get_random_header():
+    """返回一个随机的头"""
+    return {'User-Agent': str(UserAgent().random)}
 
 
 class Spider:
     # todo 针对每次请求不同的`header`来重新加载缓存
     # todo 增加字段`data`,存`post`字段
     # todo 增加字段`header`, 存header
+
+    # 强制使用缓存
+    FORCE_CACHE = 2
+    # 运行使用缓存
+    ENABLE_CACHE = 1
+    # 从不使用缓存
+    DISABLE_CACHE = 0
+
     class Cache:
         """
         __init__
@@ -300,7 +238,7 @@ class Spider:
             if not exists(join(cache_dir, self.__cache_json_name)):
                 try:
                     with open(join(self.__cache_dir, self.__cache_json_name), 'a+', encoding='utf8') as f:
-                        dump({"cached_files": {}}, f, indent=4)
+                        dump({"cached_files": {}}, f, indent=4, ensure_ascii=False)
                 except IOError as e:
                     logger.error('IO错误{}', join(self.__cache_dir, self.__cache_json_name))
                     raise e
@@ -319,11 +257,11 @@ class Spider:
                 logger.error('未知错误在{}', join(cache_dir, self.__cache_json_name))
                 raise e
 
-        def is_cached(self, name: str) -> bool:
+        def is_cached(self, name: str, ignore_date=False) -> bool:
             if name in self.__cache_json['cached_files'].keys():
                 item = self.__cache_json['cached_files'][name]
                 alive_time: datetime.datetime = datetime.datetime.strptime(item['alive_time'], '%Y-%m-%d %H:%M:%S')
-                if alive_time > datetime.datetime.now():
+                if alive_time > datetime.datetime.now() or ignore_date:
                     return True
                 else:
                     logger.debug('存活时间已过,重新缓存')
@@ -331,8 +269,14 @@ class Spider:
             else:
                 return False
 
-        def from_cache(self, name: str) -> object:
-            if self.is_cached(name):
+        def from_cache(self, name: str, force=False) -> object:
+            """
+
+            :param name:
+            :param force: 忽略时间过期, 强制从缓存读取
+            :return:
+            """
+            if self.is_cached(name, ignore_date=force):
                 item = self.__cache_json['cached_files'][name]
                 filename = item['filename']
                 with open(join(self.__cache_dir, filename), 'rb') as f:
@@ -340,7 +284,9 @@ class Spider:
             else:
                 return None
 
-        def cache(self, name: str, obj: object, alive_time: datetime.datetime) -> bool:
+        def cache(self, name: str, obj, alive_time: Union[datetime.datetime, int]) -> bool:
+            if isinstance(alive_time, int):
+                alive_time = datetime.datetime.now() + datetime.timedelta(days=alive_time)
             self.__cache_json['cached_files'][name] = {
                 "filename": str(uuid.uuid4()),
                 "typing": str(obj.__class__),
@@ -364,7 +310,7 @@ class Spider:
         def save(self):
             try:
                 with open(join(self.__cache_dir, self.__cache_json_name), 'r+', encoding='utf8') as f:
-                    dump(self.__cache_json, f, indent=4)
+                    dump(self.__cache_json, f, indent=4, ensure_ascii=False)
             except IOError as e:
                 logger.error('IO错误: {}', join(self.__cache_dir, self.__cache_json_name))
                 raise e
@@ -409,7 +355,7 @@ class Spider:
         @property
         def json(self, *args, slices=None, **kwargs) -> dict:
             """
-            slices: (start, end)字符串分片后在进行解码
+            :keyword slices: (start, end)字符串分片后在进行解码
             """
             if not self.__json:
                 try:
@@ -426,21 +372,32 @@ class Spider:
             return re.search(pattern, self.text, flags=flags)
 
     def __init__(self):
-        self.headers_generator = get_headers
+        self.headers_generator = get_random_header
         self.cache = Spider.Cache()
         self.session = requests.session()
         self.update_headers()
 
-    # todo 对于失败的`url`保存到另一个`log`文件
+    def set_cookie(self, cookie: str):
+        """设置cookie
+        :param cookie: 一个 `cookie` 字符串
+        """
+        cookie = {'Cookie': cookie}
+        self.session.cookies = requests.sessions.cookiejar_from_dict(
+            cookie,
+            cookiejar=None,
+            overwrite=True)
+
     def __get_or_post(self, handle, *args, **kwargs) -> Union[Response, requests.Response, object]:
         """
 
+        :param handle 处理请求的一个函数
         :param args `url`的各个路径:
         :param kwargs: 包含`requests`库所有选项
-        :param alive_time: 缓存存活日期
-        :param cache_enable: 是否使用缓存
-        :param sep_time: 间隔时间
-        :return:
+        :keyword alive_time: Union[datetime, int]缓存存活日期
+        :keyword ache_enable: 是否使用缓存
+        :keyword sep_time: 间隔时间
+
+        :return: Union[Response, requests.Response, object]
         """
         # 获取`alive_time`, `url`参数
         kwargs.setdefault('alive_time', datetime.datetime.now() + datetime.timedelta(days=3))
@@ -456,9 +413,11 @@ class Spider:
             url = 'http://' + url
             logger.debug('url没有添加协议, 使用[http]协议代替')
 
-        if self.cache.is_cached(url) and cache_enable:
+        is_force_cache = cache_enable == self.FORCE_CACHE
+
+        if self.cache.is_cached(url, ignore_date=is_force_cache) and cache_enable:
             logger.debug('从缓存: {} <- {}', limit_text(url, 200), '文件')
-            return self.cache.from_cache(url)
+            return self.cache.from_cache(url, force=is_force_cache)
         logger.info('下载: {}', limit_text(url, 200))
 
         retry = 3
@@ -467,7 +426,7 @@ class Spider:
                 response = self.Response(handle(url, **kwargs))
                 if len(response.response.history) >= 2:
                     logger.debug('===重定向历史===\n{}', '\n'.join([each.url for each in response.response.history]))
-                if response.status_code == requests.codes.ok:
+                if response.response.ok:
                     self.cache.cache(url, response, alive_time)
                 else:
                     logger.debug('状态码[{}], 取消缓存', response.status_code)
@@ -481,31 +440,39 @@ class Spider:
                     logger.error('取消重试---' + str(4 - retry))
                     raise e
                 logger.error('HTTP报错---' + str(4 - retry))
+                # todo 对于失败的`url`保存到另一个`log`文件
             finally:
                 retry -= 1
 
-    def get(self, *args, **kwargs) -> Response:
-        """
-        args `url`的各个路径:\n
-        kwargs: 包含`requests`库所有选项\n
-        alive_time: 缓存存活日期\n
-        cache_enable: 是否使用缓存\n
-        sep_time: 间隔时间\n
+    def get(self, *args, **kwargs) -> [Response, requests.Response, object]:
+        """获取网页
+
+        :param args: (元组)`url`的各个路径:
+        :param kwargs: 包含`requests`库所有选项
+        :keyword alive_time: Union[datetime, int]缓存存活日期
+        :keyword ache_enable: 是否使用缓存
+        :keyword sep_time: 间隔时间
+
+        :return: Union[Response, requests.Response, object]
         """
         # 获取`alive_time`, `url`参数
         return self.__get_or_post(self.session.get, *args, **kwargs)
 
     def post(self, *args, **kwargs) -> Response:
-        """
-        args `url`的各个路径:\n
-        kwargs: 包含`requests`库所有选项\n
-        alive_time: 缓存存活日期\n
-        cache_enable: 是否使用缓存\n
-        sep_time: 间隔时间\n
+        """获取网页
+
+        :param args: (元组)`url`的各个路径:
+        :param kwargs: 包含`requests`库所有选项
+        :keyword alive_time: Union[datetime, int]缓存存活日期
+        :keyword ache_enable: 是否使用缓存
+        :keyword sep_time: 间隔时间
+
+        :return: Union[Response, requests.Response, object]
         """
         return self.__get_or_post(self.session.post, *args, **kwargs)
 
     def update_headers(self):
+        """调用`self.headers_generator`来更新头"""
         if self.headers_generator:
             self.session.headers.update(self.headers_generator())
 
@@ -515,12 +482,18 @@ class Spider:
 
 def test_resource():
     res = ResourceRoot('resource')
-    logger.debug('list_dir: {}', res)
-    res['streaming.txt'] = 'streaming.txt'
-    res.save('test_json', {'date': ['t', 'e', 's', 't']})
+    # logger.debug('list_dir: {}', res.list_dir)
+    # logger.debug('files: {}', str(res.files))
+    # logger.debug('dirs: {}', str(res.dirs))
+    # logger.debug('root_dir: {}', str(res.root_dir))
+    hello = res['hello']
+
+    # res2 = ResourceRoot('res2')
+    # res2['hello2'] = res
+    logger.debug(hello)
+
     # f.seek(0)
     # print(f.read())
-    pass
 
 
 def test_spider():
@@ -533,4 +506,4 @@ def test_spider():
 
 
 if __name__ == '__main__':
-    test_json_file()
+    test_resource()
