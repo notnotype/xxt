@@ -1,0 +1,508 @@
+<!DOCTYPE html
+        PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+    <meta content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no"
+          name="viewport"/>
+    <title>手机端考试</title>
+    <link href="/css/exam/phone/basic-exam-rem.css?v=2018-1224-2037" rel="stylesheet" type="text/css"/>
+    <link href="/css/exam/phone/nav-rem.css?v=1.11" rel="stylesheet" type="text/css"/>
+    <link href="/css/msg-note-tpl.cssx?enc=265f030289fe16ec81fc262bf47f6382" rel="stylesheet" type="text/css"/>
+    <style>
+        .answerList li .content15 p {
+            width: 100%;
+            padding-top: 0.5rem;
+        }
+
+        .blankList .clearfix .content15 {
+            margin: 0.5rem 0 0 0;
+        }
+
+        .answerList .judge p {
+            padding: 0.1rem 0;
+        }
+
+        .answerList li .content15 {
+            margin: 0;
+        }
+
+        img {
+            height: auto;
+            width: auto;
+            max-width: 80%;
+            max-height: 80%;
+        }
+
+        .zm_key em:last-child {
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        .zt_count {
+            width: 33.333333%;
+        }
+
+        .zm_questions {
+            padding: 0.15rem 0.3rem 0.3rem 0.3rem;
+        }
+
+        .zm_title {
+            padding: 0.6rem 0.3rem 0.5rem 0.3rem;
+        }
+
+        .zt_examTime {
+            width: 60px;
+        }
+
+        .red {
+            color: red;
+        }
+
+        table {
+            display: block;
+            margin: 0.2rem 0;
+        }
+
+        .cardArea {
+            margin: 0.11rem auto 0.11rem 0.5rem
+        }
+
+        @media only screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) {
+            .zf_box {
+                padding-bottom: .5rem !important;
+                padding-right: .65rem;
+                padding-left: .65rem;
+                height: 1.48rem;
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+
+            .zfooter {
+                height: 1.48rem;
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+        }
+    </style>
+    <script src="/js/jquery-1.7.2.min.js"></script>
+    <script src="/js/phone/zepto-1.2.0.min.js"></script>
+    <script src="/js/phone/protocolChaoXing/CXJSBridge.js?v=1"></script>
+    <script src="/js/phone/rem750.js"></script>
+    <script src="/space/exam/js/enc_js_exam.js?v=2019-0416"></script>
+    <script src="/js/ServerHost.js"></script>
+    <script src="/js/work/phone/work-attach.js?v=2019-0329-1618"></script>
+    <script src="/space/new/js/wayer_v1.2.mini.js"></script>
+    <script src="/js/exam/phone/date.js?v=2019-0404-1256"></script>
+    <script type="text/javascript">
+        function _jsBridgeReady() {
+            var icon_src = location.origin + '/images/phone/';
+            jsBridge.postNotification('CLIENT_CUSTOM_LEFTBTN', {
+                show: '1',
+                icon: {
+                    ios: {iconHd: icon_src + 'back_icon3x.png', icon: icon_src + 'back_icon3x.png'},
+                    android: {iconHd: icon_src + 'backLevel_android_h.png', icon: icon_src + 'backLevel_android_h.png'}
+                },
+                option: "customLeftBinAction()"
+            });
+        }
+
+        function customLeftBinAction(tips) {
+            try {
+                jsBridge.postNotification('CLIENT_EXIT_LEVEL', {message: tips || ''});
+            } catch (e) {
+            }
+        }
+    </script>
+
+
+    <script>
+
+        //$.getScript("/phonedata/js/fastclick.js", function(data, status, jqxhr) {
+        //    FastClick.attach(document.body);//解决“点透”问题
+        //});
+
+        $(function () {
+
+            $("img:not(.ans-formula-moudle)").on('click', function () {
+                var url = $(this).attr("src");
+                jsBridge.postNotification("CLIENT_PREVIEW_IMAGES", {imageUrls: [{imageUrl: url}], showIndex: 0});
+            });
+
+
+        });
+
+        Zepto(function (Zepto) {
+
+            Zepto('#nextQuestion').click(function () {
+                getTheNextQuestion(Zepto('#nextQuestion').get(0), -1);
+            });
+
+            Zepto('#preQuestion').click(function () {
+                getTheNextQuestion(Zepto('#preQuestion').get(0), 1);
+            });
+
+            Zepto('#topreview').click(function () {
+                topreview();
+            });
+            Zepto('#topreview2').click(function () {
+                topreview();
+            });
+
+            Zepto(".answerCard").on('click', function (e) {
+                if (!$(".bNav").html() == "") {
+                    if ($(".bNav").css("display") == 'none') {
+                        var docHeight = $(window).height() - $(".examNav").height();
+                        $(".zmain").css("height", docHeight);
+                        $(".zmain").css("overflow", "hidden");
+                        $(".mask").show();
+                        $(".bNav").show();
+                        answerCardCheckCurrentQuestion();
+                    } else {
+                        $(".mask").hide();
+                        $(".bNav").hide();
+                        $(".zmain").css("height", "");
+                        $(".zmain").css("overflow", "auto");
+                    }
+
+                    e.stopPropagation();
+                    return;
+                }
+
+                var courseId = $("#courseId").val();
+                var classId = $("#classId").val();
+                var examRelationId = $("#testPaperId").val();
+                var examRelationAnswerId = $("#testUserRelationId").val();
+
+                $(".ui-loader").show();
+                $.ajax({
+                    type: 'get',
+                    url: '/exam/phone/questionAnswerStatic',
+                    data: {
+                        courseId: courseId,
+                        classId: classId,
+                        examRelationId: examRelationId,
+                        examRelationAnswerId: examRelationAnswerId
+                    },
+                    success: function (data) {
+                        $(".bNav").html(data);
+
+                        var docHeight = $(window).height() - $(".examNav").height();
+                        $(".zmain").css("height", docHeight);
+                        $(".zmain").css("overflow", "hidden");
+                        $(".mask").show();
+                        $(".bNav").show();
+                        answerCardCheckCurrentQuestion();
+
+                        $(".ui-loader").hide();
+
+                        navJump();
+                    }
+                });
+
+                e.stopPropagation();
+            });
+
+            $(".mask").on('click', function (e) {
+                $(".mask").hide();
+                $(".bNav").hide();
+                $(".zmain").css("height", "");
+                $(".zmain").css("overflow", "auto");
+                e.stopPropagation();
+            });
+
+        });
+
+        var phone_protocol_tail = "#INNER";
+        var maxSecond = 29;
+        var maxtime = 466;
+        var limitTime = 60 * 60;
+        // var passingStandard = ;
+        var testPaperStatus = "1";
+        //$(".zt_time").hide();
+        var change = false;
+
+        function paste() {
+            openWindowHint(HINT_TYPE_TIME, '', '该考试不允许粘贴答案', null, 2000);
+            return false;
+        }
+
+        function navJump() {
+            $('.nav-revise').each(function (index) {
+                var revisep = $(this);
+                revisep.on('click', function () {
+                    revise(revisep);
+                });
+            });
+        }
+
+        function controlEmoticons(obj, isEditor) {
+            var patt = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g;
+            var input = "";
+            if (isEditor) {
+                input = obj.getContent();
+            } else {
+                input = $(obj).val();
+            }
+            if (patt.test(input)) {
+                openWindowHint(HINT_TYPE_TIME, '', '含有不支持的表情或字符', function () {
+                    input = input.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '');
+                    if (isEditor) {
+                        obj.setContent(input);
+                    } else {
+                        $(obj).val(input);
+                    }
+                }, 1000);
+
+            }
+        }
+
+        $(function monitorAnswerChange() {
+            $('.prettyCheckbox').bind('click', function (e) {// 单选、多选、判断、投票
+                $("#answerchange").val("1");
+            });
+            $("input[type='text']").bind('change', function (e) {//填空题
+                $("#answerchange").val("1");
+                controlEmoticons(this);
+            });
+            $(".selDiv span").bind('click', function (e) {//连线、排序
+                $("#answerchange").val("1");
+            });
+
+            //简答题、含有简答题的复合题
+            var ueditorsArray;
+            if (typeof (ueditor) != "undefined") {
+                ueditorsArray = [];
+                ueditorsArray[0] = ueditor;
+            } else if (typeof (ueditors) != "undefined") {
+                ueditorsArray = ueditors;
+            }
+            if (ueditorsArray == undefined) {
+                return false;
+            }
+            setTimeout(function (ueditorsArray) {
+                $(ueditorsArray).each(function (index, ueditor) {
+                    ueditor && ueditor.addListener('contentChange', function (e) {
+                        $("#answerchange").val("1");
+                        controlEmoticons(ueditor, true);
+                    });
+                });
+            }, 1000, ueditorsArray);
+
+        });
+
+    </script>
+</head>
+
+<body>
+<input id="randomOptions" name="randomOptions" type="hidden" value="false"/>
+<input id="answerchange" type="hidden" value="0">
+<!--top start-->
+<div style="height:1.07rem;"></div>
+<ul class="examNav">
+    <li>
+        <div class="examHandelBtn">
+            <span class="remainingTime fl"></span>
+            <p class="fl" style="margin-left:5px;"><i id="minutes">60</i>:<i id="seconds">00</i></p>
+        </div>
+    </li>
+    <li>
+        <div class="examHandelBtn fr" id="topreview">
+            <p style="color:#0099ff;">整卷浏览</p>
+        </div>
+    </li>
+</ul>
+<div class="mask"></div>
+<div class="bNav" style="bottom: 42px;"></div>
+<!--top end-->
+<!--main start-->
+<div class="zmain">
+    <div class="zm_box">
+        <input id="source" type="hidden" value="0">
+        <input id="userId" name="userId" type="hidden" value="152804638"/>
+        <h1 class="zm_title">二.多选题<span class="g7 f14">（20题，40.0分）</span></h1>
+        <style>
+            label.prettyCheckbox span.holder {
+                border-radius: 6px;
+            }
+
+            label.zpcheckbox span.holder {
+                border-radius: 12px;
+            }
+        </style>
+        <form action="/exam/test/reVersionSubmitTestNew?classId=1718&courseId=215779000&testPaperId=133380&testUserRelationId=317803&cpi=154457568"
+              id="submitTest"
+              method="post">
+            <input id="courseId" name="courseId" type="hidden" value="215779000"/>
+            <input id="testPaperId" name="testPaperId" type="hidden" value="133380"/>
+            <input id="testUserRelationId" name="testUserRelationId" type="hidden" value="317803"/>
+            <input id="classId" name="classId" type="hidden" value="1718"/>
+            <input id="type" name="type" type="hidden" value="1"/>
+            <input name="isphone" type="hidden" value="true"/>
+
+            <input id="imei" name="imei" type="hidden" value=""/>
+
+            <input id="subCount" name="subCount" type="hidden" value=""/>
+            <input id="remainTime" name="remainTime" type="hidden" value="466"/>
+            <input id="tempSave" name="tempSave" type="hidden" value="false"/>
+            <input id="timeOver" name="timeOver" type="hidden" value="false"/>
+
+            <input id="encRemainTime" name="encRemainTime" type="hidden" value="467"/>
+            <input id="encLastUpdateTime" name="encLastUpdateTime" type="hidden" value="1607355391367"/>
+            <input id="cpi" type="hidden" value="154457568"/>
+            <input id="enc" name="enc" type="hidden" value="bcca5b70ab9067e31900103d5bc20188"/>
+            <div class="zm_questions">
+                <div class="zm_ask">
+                    <span>1、</span>建设中国特色社会主义法治体系，能够有效推进党、国家、社会各项事务治理的（ ）。
+                    <ul class="zm_key">
+
+
+                        <li onclick="selectAnswer('43200')">
+                            <input id="answer43200A" name="answer43200" type="checkbox" value="A"/>
+                            <label for="answer43200A"> <span class='holderWrap fl'><span
+                                    class='holder'>A</span></span>
+                                <em class="fl">
+                                    <cc>制度化</cc>
+                                </em>
+                            </label>
+                        </li>
+
+
+                        <li onclick="selectAnswer('43200')">
+                            <input id="answer43200B" name="answer43200" type="checkbox" value="B"/>
+                            <label for="answer43200B"> <span class='holderWrap fl'><span
+                                    class='holder'>B</span></span>
+                                <em class="fl">
+                                    <cc>规范化</cc>
+                                </em>
+                            </label>
+                        </li>
+
+
+                        <li onclick="selectAnswer('43200')">
+                            <input id="answer43200C" name="answer43200" type="checkbox" value="C"/>
+                            <label for="answer43200C"> <span class='holderWrap fl'><span
+                                    class='holder'>C</span></span>
+                                <em class="fl">
+                                    <cc>固定化</cc>
+                                </em>
+                            </label>
+                        </li>
+
+
+                        <li onclick="selectAnswer('43200')">
+                            <input id="answer43200D" name="answer43200" type="checkbox" value="D"/>
+                            <label for="answer43200D"> <span class='holderWrap fl'><span
+                                    class='holder'>D</span></span>
+                                <em class="fl">
+                                    <cc>程序化</cc>
+                                </em>
+                            </label>
+                        </li>
+                        <input id="answers43200" name="answers43200" type="hidden" value=""/>
+                    </ul>
+                </div>
+            </div>
+            <input name="type43200" type="hidden" value="1"/>
+            <input name="score43200" type="hidden" value="2.0"/>
+            <input id="questionId" name="questionId" type="hidden" value="43200"/>
+            <input id="start" name="start" type="hidden" value="40"/>
+        </form>
+    </div>
+
+</div>
+<!--main end-->
+<!--footer start-->
+<div class="zfooter"></div>
+<div class="zf_box" style="padding: 0 0.625rem">
+    <div class="width33 fl">
+        <a class="zf_page fl" href="javascript:" id="nextQuestion">
+            < 上一题</a>
+    </div>
+    <div class="width33 fr">
+        <a class="zf_page down_page" href="javascript:" id="preQuestion">下一题 ></a>
+        <a class="fr fc_submit" href="javascript:" id="topreview"
+           style="margin-right: 0.2rem; margin-top: 0.2rem;  display: none; ">复查交卷</a>
+    </div>
+    <div class="width33 fr">
+        <div class="answerCard cardArea">
+            <span>41/80</span>
+            <p>答题卡</p>
+        </div>
+    </div>
+</div>
+<!--footer end-->
+</body>
+<link href="/css/phone/hint750.css?v=2019-0320-1736" rel="stylesheet"/>
+<div class="rescan_main" id="msg">
+    <div class="msg-title">title</div>
+    <div class="msg-content">
+        <div class="msg-content-middle"></div>
+        <div class="msg-content-b">
+            <span class="msg-content-left msg-content-ok">确定</span>
+            <span class="msg-content-right msg-content-cancel">取消</span>
+        </div>
+    </div>
+</div>
+<div class="rescan_main" id="hint">
+    <div class="msg-title">title</div>
+    <div class="msg-content">
+        <div class="msg-content-middle"></div>
+        <div class="msg-content-b">
+            <span class="hint-content-left msg-content-cancel">确定</span>
+        </div>
+    </div>
+</div>
+<div class="rescan_main" id="time">
+    <div class="msg-title">title</div>
+    <div class="msg-content">
+        <div class="msg-content-middle"></div>
+    </div>
+</div>
+<div class="rescan_main" id="confirm">
+    <div class="msg-title"></div>
+    <div class="msg-content">
+        <div class="msg-content-middle"></div>
+        <div class="msg-content-b">
+            <span class="msg-content-left msg-content-ok"></span>
+            <span class="msg-content-right msg-content-cancel"></span>
+        </div>
+    </div>
+</div>
+
+<div class="rescan_mainNew" id="confirmNew">
+    <div class="msg-title"></div>
+    <div class="msg-contentNew">
+        <div class="msg-content-middleNew"></div>
+        <div class="msg-content-bNew">
+            <span class="msg-content-leftNew msg-content-okNew"></span>
+            <span class="msg-content-rightNew msg-content-cancelNew"></span>
+        </div>
+    </div>
+</div>
+
+<div class="rescan_mainNew" id="noticeConfirm" style="height:3.2rem;">
+    <div class="notice-title"></div>
+    <div class="msg-contentNew">
+        <div class="notice-content-middle"></div>
+        <div class="msg-content-bNew">
+            <span class="msg-content-leftNew msg-content-okNew" style="width:100%;"></span>
+        </div>
+    </div>
+</div>
+
+<div class="black_overlay" id="mask"></div>
+<script src="/js/phone/hint.js?v=2019-0321-1506"></script>
+<link href="/css/statistic/phone/circle.css?v=1" rel="stylesheet"/>
+<div class="Wrappadding" id="Wrappadding">
+    <div class="ui-loader ui-corner-all ui-body-a ui-loader-default"><span class="ui-icon ui-icon-loading"></span></div>
+</div>
+<div id="loadingTip" style="left:40%;top:40%;position:absolute;display:none;"><img
+        src="/css/set/phone/images/loading.png" style="width:38px;height:30px;"/></div>
+<script src="/js/exam/phone/prettyCheckboxes.js?v=4.0" type="text/javascript"></script>
+<script src="/js/exam/phone/do-exam-s.js?v=2019-0404-1738"></script>
+<!--
+<script>
+    </script>
+-->
+
+</html>
