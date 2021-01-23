@@ -1,0 +1,88 @@
+{
+    "cached_files": {
+        "https://exm-mayuan-ans.chaoxing.com/selftest/start-test?courseId=215779000&classId=1718&cpi=154457568&dirid=68773828&reset=true&protocol_v=1": {
+            "filename": "3d988c51-d4cf-42c6-a8ad-e93a9f6dff0f",
+            "typing": "<class 'spider.spider.Spider.Response'>",
+            "repr": "<spider.spider.Spider.Response object at 0x000001538BF73850>",
+            "alive_time": "2023-09-02 12:52:47"
+        },
+        "https://exm-mayuan-ans.chaoxing.com/exam/phone/look-detail?courseId=215779000&classId=1718&examId=124904&examAnswerId=301964&protocol_v=1": {
+            "filename": "c2e7120a-8dd6-4926-8141-820e3435f62c",
+            "typing": "<class 'spider.spider.Spider.Response'>",
+            "repr": "<spider.spider.Spider.Response object at 0x000001538BF48FD0>",
+            "alive_time": "2023-09-02 12:52:47"
+        },
+        "https://exm-mayuan-ans.chaoxing.com/selftest/start-test?courseId=215779000&classId=1718&cpi=154457568&dirid=68773829&reset=true&protocol_v=1": {
+            "filename": "835503a6-b54e-47d8-a2b9-f68d47f5804f",
+            "typing": "<class 'spider.spider.Spider.Response'>",
+            "repr": "<spider.spider.Spider.Response object at 0x000001538BF48FD0>",
+            "alive_time": "2023-09-02 12:52:47"
+        },
+        "https://exm-mayuan-ans.chaoxing.com/exam/phone/look-detail?courseId=215779000&classId=1718&examId=124907&examAnswerId=301964&protocol_v=1": {
+            "filename": "1fc2f33d-ede1-4e87-8449-f1083a757014",
+            "typing": "<class 'spider.spider.Spider.Response'>",
+            "repr": "<spider.spider.Spider.Response object at 0x000001538BF73850>",
+            "alive_time": "2023-09-02 12:52:47"
+        },
+        "https://exm-mayuan-ans.chaoxing.com/selftest/start-test?courseId=215779000&classId=1718&cpi=154457568&dirid=68773832&reset=true&protocol_v=1": {
+            "filename": "f34753e5-202e-4d43-bfde-7827a38869c3",
+            "typing": "<class 'spider.spider.Spider.Response'>",
+            "repr": "<spider.spider.Spider.Response object at 0x000001538BA16EB0>",
+            "alive_time": "2023-09-02 12:52:47"
+        },
+        "https://exm-mayuan-ans.chaoxing.com/exam/phone/look-detail?courseId=215779000&classId=1718&examId=124930&examAnswerId=301964&protocol_v=1": {
+            "filename": "7186fbd9-9dce-4cbc-a341-df527adccd8f",
+            "typing": "<class 'spider.spider.Spider.Response'>",
+            "repr": "<spider.spider.Spider.Response object at 0x000001538BF48FD0>",
+            "alive_time": "2023-09-02 12:52:47"
+        },
+        "https://exm-mayuan-ans.chaoxing.com/selftest/start-test?courseId=215779000&classId=1718&cpi=154457568&dirid=68773852&reset=true&protocol_v=1": {
+            "filename": "b1c3010b-7e35-4f70-9150-1236c863ee54",
+            "typing": "<class 'spider.spider.Spider.Response'>",
+            "repr": "<spider.spider.Spider.Response object at 0x000001538BF48FD0>",
+            "alive_time": "2023-09-02 12:52:47"
+        },
+        "https://exm-mayuan-ans.chaoxing.com/exam/phone/look-detail?courseId=215779000&classId=1718&examId=125085&examAnswerId=301964&protocol_v=1": {
+            "filename": "eca20503-78fe-4465-a2d5-7a11c357e055",
+            "typing": "<class 'spider.spider.Spider.Response'>",
+            "repr": "<spider.spider.Spider.Response object at 0x000001538BF89E50>",
+            "alive_time": "2023-09-02 12:52:48"
+        },
+        "https://exm-mayuan-ans.chaoxing.com/selftest/start-test?courseId=215779000&classId=1718&cpi=154457568&dirid=68773853&reset=true&protocol_v=1": {
+            "filename": "ad9e7fcd-43b5-466f-ac57-ed1516b3c3ad",
+            "typing": "<class 'spider.spider.Spider.Response'>",
+            "repr": "<spider.spider.Spider.Response object at 0x000001538BF89C10>",
+            "alive_time": "2023-09-02 12:52:48"
+        },
+        "https://exm-mayuan-ans.chaoxing.com/exam/phone/look-detail?courseId=215779000&classId=1718&examId=125027&examAnswerId=301964&protocol_v=1": {
+            "filename": "3b5b4a6f-42e0-49b6-8dd7-d26f40770e81",
+            "typing": "<class 'spider.spider.Spider.Response'>",
+            "repr": "<spider.spider.Spider.Response object at 0x000001538BF89D60>",
+            "alive_time": "2023-09-02 12:52:48"
+        },
+        "https://exm-mayuan-ans.chaoxing.com/selftest/start-test?courseId=215779000&classId=1718&cpi=154457568&dirid=68773855&reset=true&protocol_v=1": {
+            "filename": "602d10a1-bebf-4174-b346-d2ae9de8e022",
+            "typing": "<class 'spider.spider.Spider.Response'>",
+            "repr": "<spider.spider.Spider.Response object at 0x000001538BF48FD0>",
+            "alive_time": "2023-09-02 12:52:48"
+        },
+        "https://exm-mayuan-ans.chaoxing.com/exam/phone/look-detail?courseId=215779000&classId=1718&examId=124917&examAnswerId=301964&protocol_v=1": {
+            "filename": "f2d7b4aa-9f11-4ade-8bb8-3768695b6ec3",
+            "typing": "<class 'spider.spider.Spider.Response'>",
+            "repr": "<spider.spider.Spider.Response object at 0x000001538BF73850>",
+            "alive_time": "2023-09-02 12:52:48"
+        },
+        "https://exm-mayuan-ans.chaoxing.com/selftest/start-test?courseId=215779000&classId=1718&cpi=154457568&dirid=68773856&reset=true&protocol_v=1": {
+            "filename": "f81a07a2-030d-4961-98ed-755abfac5c8a",
+            "typing": "<class 'spider.spider.Spider.Response'>",
+            "repr": "<spider.spider.Spider.Response object at 0x000001538BF73910>",
+            "alive_time": "2023-09-02 12:52:49"
+        },
+        "https://exm-mayuan-ans.chaoxing.com/exam/phone/look-detail?courseId=215779000&classId=1718&examId=124928&examAnswerId=301964&protocol_v=1": {
+            "filename": "ae49c866-acb2-458f-88d0-e8e3e964da08",
+            "typing": "<class 'spider.spider.Spider.Response'>",
+            "repr": "<spider.spider.Spider.Response object at 0x000001538BF48CA0>",
+            "alive_time": "2023-09-02 12:52:49"
+        }
+    }
+}
