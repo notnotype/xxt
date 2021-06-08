@@ -1,0 +1,143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html style="font-size:50px;">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+    <meta content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no"
+          name="viewport"/>
+    <title>自测</title>
+    <script src="/js/phone/protocolChaoXing/CXJSBridge.js?v=15"></script>
+    <script src="/js/phone/zepto-1.1.6.min.js"></script>
+    <script src="/js/phone/touch-1.1.6.js"></script>
+    <script src="/js/phone/app.utils2.js?v=3"></script>
+    <script src="/js/ServerHost.js"></script>
+
+    <link href="/exam-selftest/css/swiper.min.css" rel="stylesheet">
+    <link href="/exam-selftest/css/common.css" rel="stylesheet" type="text/css"/>
+    <link href="/exam-selftest/css/style.css" rel="stylesheet" type="text/css"/>
+    <script src="/js/phone/rem750.js"></script>
+    <script>
+        var identityDescription = '学生';
+
+        function _jsBridgeReady() {
+            jsBridge.bind('CLIENT_REFRESH_EVENT', function (object) {
+                window.location.reload();
+            });
+        }
+
+        Zepto(function () {
+            Zepto('.infoList').on('click', 'li', function () {
+                var title = '自测';
+                var type = 1;
+                var courseId = $(this).attr('id');
+                var url = ServerHost.moocDomain + '/selftest/mode?courseId=' + courseId;
+                jsBridge.postNotification('CLIENT_OPEN_URL', {"title": title, "loadType": type, "webUrl": url});
+            });
+            requestStat();
+        });
+
+        function requestStat() {
+            var courseIds = [];
+            Zepto('.infoList li').forEach(function (item) {
+                var courseId = $(item).attr('id');
+                courseIds.push(courseId);
+            });
+            if (courseIds.length == 0) {
+                return;
+            }
+            var data = {'courseids': courseIds.join(',')};
+            var url = "/selftest/progress-stat";
+            var type = "get";
+            $.ajax({
+                type: type,
+                url: url,
+                data: data,
+                dataType: 'json',
+                success: function (result) {
+                    var status = result.status;
+                    if (!status) {
+                        return;
+                    }
+                    var data = result.data;
+                    $.each(data, function (index, item) {
+                        var courseId = item.courseid;
+                        var questionProgress = item.questionProgress;
+                        var rankProgress = item.rankProgress;
+                        var description = "进度：" + questionProgress + "  超过" + rankProgress + "的" + identityDescription;
+                        $('#' + courseId).find('b').html(description);
+                    });
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+<div class="wid750">
+    <div class="swiper-container banner">
+        <div class="swiper-wrapper">
+            <div class="swiper-slide"><img height="100%" src="/exam-selftest/temp/banner1.png" width="100%"/></div>
+            <div class="swiper-slide"><img height="100%" src="/exam-selftest/temp/banner2.png" width="100%"/></div>
+        </div>
+        <div class="swiper-pagination"></div>
+    </div>
+    <ul class="infoList">
+
+        <li id="215779000">
+            <span class="headPic"><img height="100%"
+                                       src=" https://p.ananas.chaoxing.com/star3/origin/2466266703a3646dd9f13b01205122da.png  "
+                                       width="100%"/></span>
+            <div class="listright">
+                <p class="name">
+                    <span>思想道德修养与法律基础</span>
+                    <b>......</b>
+                </p>
+            </div>
+        </li>
+        <li id="215780498">
+            <span class="headPic"><img height="100%"
+                                       src=" https://p.ananas.chaoxing.com/star3/origin/935f1d8464aa6af99a018be288b8555d.png  "
+                                       width="100%"/></span>
+            <div class="listright">
+                <p class="name">
+                    <span>中国近现代史纲要</span>
+                    <b>......</b>
+                </p>
+            </div>
+        </li>
+        <li id="215780579">
+            <span class="headPic"><img height="100%"
+                                       src=" https://p.ananas.chaoxing.com/star3/origin/28d95ef5e9a60c7e21caf7c5384d5e50.jpg  "
+                                       width="100%"/></span>
+            <div class="listright">
+                <p class="name">
+                    <span>马克思主义基本原理概论</span>
+                    <b>......</b>
+                </p>
+            </div>
+        </li>
+        <li id="215780677">
+            <span class="headPic"><img height="100%"
+                                       src=" https://p.ananas.chaoxing.com/star3/origin/4a0d6605b4bc12eb1c844a8959e58e63.png  "
+                                       width="100%"/></span>
+            <div class="listright">
+                <p class="name">
+                    <span>毛泽东思想和中国特色社会主义理论体系概论</span>
+                    <b>......</b>
+                </p>
+            </div>
+        </li>
+    </ul>
+    <div class="het90"></div>
+</div>
+<script src="/exam-selftest/js/swiper.min.js"></script>
+<script>
+    var swiper = new Swiper('.swiper-container', {
+        pagination: {
+            el: '.swiper-pagination',
+        },
+        loop: true,
+        autoplay: true,
+    });
+</script>
+</body>
+</html>

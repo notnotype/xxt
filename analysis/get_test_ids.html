@@ -1,0 +1,138 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta content="width=device-width, initial-scale=1,maximum-scale=1, user-scalable=no" name="viewport"/>
+    <meta charset="utf-8">
+    <title>章节自测</title>
+    <script src="/js/phone/protocolChaoXing/CXJSBridge.js?v=15"></script>
+    <script src="/js/phone/zepto-1.1.6.min.js"></script>
+    <script src="/js/phone/touch-1.1.6.js"></script>
+    <script src="/js/phone/app.utils2.js?v=3"></script>
+    <script src="/js/ServerHost.js"></script>
+
+    <link href="/exam-selftest/css/swiper.min.css" rel="stylesheet">
+    <link href="/exam-selftest/css/common.css" rel="stylesheet" type="text/css"/>
+    <link href="/exam-selftest/css/catalog.css" rel="stylesheet" type="text/css"/>
+    <script src="/js/phone/rem750.js"></script>
+
+    <script text="text/javascript">
+        Zepto(function () {
+            Zepto('.con').on('tap', 'li', function () {
+                var id = $(this).attr('id');
+                var title = '章节自测';
+                var type = 1;
+                var courseId = $('input[name="courseId"]').val();
+                var classId = $('input[name="classId"]').val();
+                var cpi = $('input[name="cpi"]').val();
+                var url = ServerHost.moocDomain + '/selftest/start-test?courseId=' + courseId + '&classId=' + classId + '&cpi=' + cpi + '&dirid=' + id;
+                jsBridge.postNotification('CLIENT_OPEN_URL', {"title": title, "loadType": type, "webUrl": url});
+            });
+        });
+    </script>
+</head>
+<body class="catalogWrap">
+<input name="courseId" type="hidden" value="215780498"/>
+<input name="classId" type="hidden" value="2567"/>
+<input name="cpi" type="hidden" value="154457568"/>
+<div class="wid750">
+    <div class="fuzzyLib">
+        <div class="fuzzyBg">
+            <div class="bnr"></div>
+        </div>
+        <div class="lib">
+            <div class="img"><img
+                    src=" https://p.ananas.chaoxing.com/star3/origin/935f1d8464aa6af99a018be288b8555d.png  "/></div>
+            <div class="art">
+                <div class="artCon">
+                    <h2>中国近现代史纲要</h2>
+                    <p></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--列表-->
+    <div class="topicList-box">
+        <div class="topicList">
+            <div class="topicListH"><h2>题库目录</h2></div>
+            <ul class="con">
+                <li id="68773748"><a href="javascript:void(0)"><span>中编综述</span></a></li>
+                <li id="68773749"><a href="javascript:void(0)"><span>下编综述</span></a></li>
+                <li id="68773750"><a href="javascript:void(0)"><span>上编综述</span></a></li>
+                <li id="68773751"><a href="javascript:void(0)"><span>第一章</span></a></li>
+                <li id="68773764"><a href="javascript:void(0)"><span>第二章</span></a></li>
+                <li id="68773784"><a href="javascript:void(0)"><span>第三章</span></a></li>
+                <li id="68773785"><a href="javascript:void(0)"><span>第四章</span></a></li>
+                <li id="68773786"><a href="javascript:void(0)"><span>第五章</span></a></li>
+                <li id="68773787"><a href="javascript:void(0)"><span>第六章</span></a></li>
+                <li id="68773788"><a href="javascript:void(0)"><span>第七章</span></a></li>
+                <li id="68773789"><a href="javascript:void(0)"><span>第八章</span></a></li>
+                <li id="68773790"><a href="javascript:void(0)"><span>第九章</span></a></li>
+                <li id="68773791"><a href="javascript:void(0)"><span>第十章</span></a></li>
+                <li id="68773792"><a href="javascript:void(0)"><span>第十一章</span></a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+<link href="/css/phone/hint750.css?v=2019-0320-1736" rel="stylesheet"/>
+<div class="rescan_main" id="msg">
+    <div class="msg-title">title</div>
+    <div class="msg-content">
+        <div class="msg-content-middle"></div>
+        <div class="msg-content-b">
+            <span class="msg-content-left msg-content-ok">确定</span>
+            <span class="msg-content-right msg-content-cancel">取消</span>
+        </div>
+    </div>
+</div>
+<div class="rescan_main" id="hint">
+    <div class="msg-title">title</div>
+    <div class="msg-content">
+        <div class="msg-content-middle"></div>
+        <div class="msg-content-b">
+            <span class="hint-content-left msg-content-cancel">确定</span>
+        </div>
+    </div>
+</div>
+<div class="rescan_main" id="time">
+    <div class="msg-title">title</div>
+    <div class="msg-content">
+        <div class="msg-content-middle"></div>
+    </div>
+</div>
+<div class="rescan_main" id="confirm">
+    <div class="msg-title"></div>
+    <div class="msg-content">
+        <div class="msg-content-middle"></div>
+        <div class="msg-content-b">
+            <span class="msg-content-left msg-content-ok"></span>
+            <span class="msg-content-right msg-content-cancel"></span>
+        </div>
+    </div>
+</div>
+
+<div class="rescan_mainNew" id="confirmNew">
+    <div class="msg-title"></div>
+    <div class="msg-contentNew">
+        <div class="msg-content-middleNew"></div>
+        <div class="msg-content-bNew">
+            <span class="msg-content-leftNew msg-content-okNew"></span>
+            <span class="msg-content-rightNew msg-content-cancelNew"></span>
+        </div>
+    </div>
+</div>
+
+<div class="rescan_mainNew" id="noticeConfirm" style="height:3.2rem;">
+    <div class="notice-title"></div>
+    <div class="msg-contentNew">
+        <div class="notice-content-middle"></div>
+        <div class="msg-content-bNew">
+            <span class="msg-content-leftNew msg-content-okNew" style="width:100%;"></span>
+        </div>
+    </div>
+</div>
+
+<div class="black_overlay" id="mask"></div>
+<script src="/js/phone/hint.js?v=2019-0321-1506"></script>
+</body>
+</html>
