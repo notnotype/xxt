@@ -6,7 +6,7 @@
 
 ## clone项目
 
-```
+```shell
 git clone https://www.github.com/notnotype/xxt.git
 cd xxt
 pip install -r requirements.txt

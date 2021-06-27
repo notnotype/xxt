@@ -7,6 +7,7 @@ from json import dumps
 from typing import Dict
 
 import requests
+from icecream import ic
 from loguru import logger
 from lxml.etree import HTML
 from requests import Session
@@ -22,9 +23,14 @@ def get_uuid():
 
 
 class XXT:
-    def __init__(self, course_id, class_id):
-        self.course_id = course_id
-        self.class_id = class_id
+    course_id: str
+    class_id: str
+
+    def __init__(self, course_id=None, class_id=None):
+        if course_id:
+            self.course_id = course_id
+        if class_id:
+            self.class_id = class_id
         self.default_headers = {
             'Host': 'exm-mayuan-ans.chaoxing.com',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36'
@@ -93,7 +99,7 @@ class XXT:
         question_answers = [(elem_tostring(question), elem_tostring(answer)) for question, answer in question_answers]
         return question_answers
 
-    def get_course_ids(self):
+    def get_courses(self):
         fid = self.client.cookies.get('fid', None)
         if not fid:
             raise RuntimeError('cookies中找不到fid， 未登录')
@@ -101,8 +107,9 @@ class XXT:
         resp = self.get(url)
         resp.raise_for_status()
         html = HTML(resp.text)
-        test_list = html.xpath('//ul[@class="infoList"]/li/@id')
-        return test_list
+        course_list = html.xpath('//ul[@class="infoList"]/li/@id')
+        course_title = html.xpath('//ul[@class="infoList"]/li/div/p/span/text()')
+        return list(zip(course_list, course_title))
 
     def get_test_ids(self):
         url = f'https://exm-mayuan-ans.chaoxing.com/selftest/chapter-test' \
@@ -113,20 +120,26 @@ class XXT:
         test_list = html.xpath('//div[@class="topicList"]/ul[@class="con"]/li/@id')
         return test_list
 
+    def get_class_id(self):
+        url = f'https://exm-mayuan-ans.chaoxing.com/selftest/mode?courseId={self.course_id}'
+        resp = self.get(url)
+        resp.raise_for_status()
+        html = HTML(resp.text)
+        self.class_id = html.xpath('//input[@name="classId"]/@value')[0]
+        return self.class_id
 
 
 if __name__ == '__main__':
     # _dir_ids = [68773748]
 
-    xxt = XXT('215780677', '3728')
+    xxt = XXT('203859054')
     xxt.set_cookie(
-        'lv=2; fid=1821; _uid=152804638; UID=152804638; vc=A36411C8D18DADE1DECFFC4CD2769FF4; xxtenc=20fa5b1fdc858614416da69204450107; _tid=106990444; sso_puid=152804638; _industry=5; fidsCount=3; schoolId=137737; examinationRole=cea72e64fd8ab55b9c1c500a86d45c3a; k8s=1cea45769c4c05a8f7d2682e21316a3a5973c850; route=bca6486eee9aca907e6257b7921729c3; uf=b2d2c93beefa90dcd1ee03ad65e10855002362bacce7629380f5a15178273ea3b986de932964aa04de1c393f16d8e37d913b662843f1f4ad6d92e371d7fdf6446ece1d9f47db742bce71fc6e59483dd37d50523ec80a66bd725ab6f4bfb1b6019e349e167d408b2a; _d=1624709935080; vc2=AA2FD3DBCF50E227B1319F6C4FB6A478; vc3=CSE4EdeQ4JSGgoBRBJcAp9XBVskfOmeHB9Yp0wf8pHV2AARnWEGRKsRl4mnuBleAQvlfOPloy1vldpNgGZiOs3JIZDm4Q8pK7yCkQAQz%2FjsAAQuV8Tq8wSHAjbQyFC94LXs0onD2E6EaaISO9VVc4X0Pvy8I%2Bu6gP8f7X9E%2BMEI%3D5e789164862268221875e38b4dd1a2f1; DSSTASH_LOG=C_38-UN_55-US_152804638-T_1624709935081; KI4SO_SERVER_EC=RERFSWdRQWdsckNwckxwM2pXeFFSYndFc05uVzhIR05MMWlERXJTZERXNUtGbDVZSjJybStkSXd3%0ANkprU2VsMkRtU2djWlRjU2NTVQp1NG13bWtscWxUZ3NZS2RTeGNSNDdhRWVQN05mSUVZN3dlclJt%0ARDFtdWE0OVd4bXBHSTZockJmNDRYdlVvNVZVdmpjVGZ2STd3VEh1Ck5EcWZVcTVkWFY1eHJCSGJM%0ARXc4NnFVTnBsbFR1T0dhMzl1cDR3V0NMYUpXOFk5bERvRG9ZODA4d002UEFoQkw1NWZMR1hYd3Rm%0AL3EKRXNpYXFmR0wrQzFVYXZZaytuamcwOGNodEJGR3IzZytOak1OQjlWRWxidWRBcXhLMHVkVkxF%0AUzNib2JiNDhLeU1RM0QweDNIc0hYSgpsYjVjbUhFeDFydEJQQUlWclZTUHJRUzh6dk1DVHBib3FS%0AU2g3WWRoOW54c2xkRndvZzNxZVhKVEFUWkZpSlRSSEhucE5nSk9sdWlwCkZLSHRVNWlsM2ExQlR5%0AaWRFVnk5dkxDYXorTCtWWUtXVG5DMU1lNDBPcDlTcmwyckxocXM2WDluVWNTTTRsVGYzSWRZP2Fw%0AcElkPTEma2V5SWQ9MQ%3D%3D; _dd152804638=1624709938305; jrose=66E2B5867C3D2503075F007C414E3A06.self-exam-system-3910617459-881q7; EXAM_FID=137737')
+        'k8s=94b55a395f76dcca7b5d74ef4f49561348c0490b; route=d4fc925c8d78ce1315b0eab056f65586; source=""; cookiecheck=true; AID_dsr=55; superlib=""; msign_dsr=1624672976934; search_uuid=9e9b93bd%2d0fde%2d4478%2dbdc2%2df9986ea58bfe; mqs=19e3b526c24d63963d23bb7a0b9fd5063452ab54e90deae287793d7e4e0031dca682df1732c2ee4183fccc602da3be02be4e8fb00cc31963da0c23a6adf5ac273ff78a53bee9da7f25b21bb28f6da16c81dc0ab09bfeb6109f7e6cd7c96a142b23ab17e1b3566a10f4c7c6fc68c7adcf; rt=-2; thirdRegist=1; s=11401F839C536D9E; _industry=5; web_im_hxToken=YWMtfdhJMtZ5EeuNRrUi9FEYVaKlE4D%2d6RHksYgJxSsb8jJZFa%5fwAkMR67k%2defI%2dKewcAwMAAAF6SEeI%5fABPGgAPIftrPDHSkMUmo4PkQspYvKvFPJMbC2qprcTG3HxI3A; web_im_tid=106990444; web_im_pic=http%3a%2f%2fphoto%2echaoxing%2ecom%2fphoto%5f80%2ejpg; web_im_name=%u848b%u4fca%u6770; KI4SO_SERVER_EC=RERFSWdRQWdsckNwckxwM2pXeFFSVGJRM3E5bytLQ0NNY0U1SHBIZ250bEtGbDVZSjJybStkSXd3%0ANkprU2VsMkRtU2djWlRjU2NTVQp1NG13bWtscWxXYWJhTEMyQnlnSnFKanZDVEREdzVzN3dlclJt%0ARDFtdWE0OVd4bXBHSTZockJmNDRYdlVvNVZVdmpjVGZ2STd3VEh1Ck5EcWZVcTVkWFY1eHJCSGJM%0ARXc4NnFVTnBsbFR1T0dhMzl1cDR3V0NMYUpXOFk5bERvRG9ZODA4d002UEFoQkw1NWZMR1hYd3Rm%0AL3EKRXNpYXFmR0wrQzFVYXZZaytuamcwOGNodEJGR3IzZytOak1OQjlWRWxidWRBcXhLMHVkVkxF%0AUzNib2JiNDhLeU1RM0QweDNIc0hYSgpsYjVjbUhFeDFydEJQQUlWclZTUHJRUzh6dk1DVHBib3FS%0AU2g3WWRoOW54c2xkRndvZzNxZVhKVEFUWkZpSlRSSEhucE5nSk9sdWlwCkZLSHRVNWlsM2ExQlR5%0AaWRFVnk5dkxDYXorTCtWWUtXVG5DMU1lNDBPcDlTcmwyckxocXM2WDluVVdNTUIvTnNnZVNUP2Fw%0AcElkPTEma2V5SWQ9MQ%3D%3D; _tid=106990444; sso_puid=152804638; duxiu=userName%5fdsr%2c%3dtfm%2c%21userid%5fdsr%2c%3d23224%2c%21char%5fdsr%2c%3d%u9551%2c%21metaType%2c%3d257%2c%21dsr%5ffrom%2c%3d1%2c%21logo%5fdsr%2c%3dlogo0408%2ejpg%2c%21logosmall%5fdsr%2c%3dsmall0408%2ejpg%2c%21title%5fdsr%2c%3d%u6e56%u5357%u79d1%u6280%u5927%u5b66%2c%21url%5fdsr%2c%3d%2c%21compcode%5fdsr%2c%3d1088%2c%21province%5fdsr%2c%3d%u6e56%u5357%2c%21readDom%2c%3d%2c%21isdomain%2c%3d3%2c%21showcol%2c%3d0%2c%21hu%2c%3d0%2c%21areaid%2c%3d0%2c%21uscol%2c%3d0%2c%21isfirst%2c%3d0%2c%21istest%2c%3d0%2c%21cdb%2c%3d0%2c%21og%2c%3d0%2c%21ogvalue%2c%3d0%2c%21testornot%2c%3d1%2c%21remind%2c%3d0%2c%21datecount%2c%3d3110%2c%21userIPType%2c%3d1%2c%21my%2c%3d1%2c%21lt%2c%3d0%2c%21ttt%2c%3dfxlogin%2echaoxing%2c%21enc%5fdsr%2c%3d2AD0B126EF91D739BEBE3F62A228A1C5; spaceFid=137737; spaceRoleId=""; tl=0; jrose=44765E6CF7812D5718977CBF30450261.self-exam-system-3910617459-881q7; uname=2004060213; lv=2; fid=1821; _uid=152804638; uf=b2d2c93beefa90dcd1ee03ad65e10855002362bacce7629380f5a15178273ea3b986de932964aa04ca6bfd70c21bcc03913b662843f1f4ad6d92e371d7fdf6446ece1d9f47db742bce71fc6e59483dd37d50523ec80a66bd8d3ee8bf68b09c216f7c04307e5fa421; _d=1624776714030; UID=152804638; vc=A36411C8D18DADE1DECFFC4CD2769FF4; vc2=130C99133255AF11FB6653EF592C8DDC; vc3=N2aGp9IxQZoVUtkTvshADjyrsoSYNgCPrLrNhX%2B6w8TfyagvqAwFODhs8PDBRnOcIVnl%2Fv4jfuPlEQZtxnW%2B0ieYf3UIHFSg8k6XiKcTLV021S9fVu7Am2vxGDbejH%2BRRLRFcRIMWRZhbctqeVvBWUAfiAFtEjrn0FffvC27N5Y%3D7d9b262d0da7ea90c9923fdf72931cea; xxtenc=20fa5b1fdc858614416da69204450107; DSSTASH_LOG=C_38-UN_55-US_152804638-T_1624776714032; EXAM_FID=1821')
+    xxt.get_class_id()
     _dir_ids = xxt.get_test_ids()
-    # r = xxt.get_course_ids()
-    # ic(r)
-    # xxt.course_id = '215983901'
-    # r = xxt.course_id = xxt.get_test_ids()
-    # ic(r)
+
+    r = xxt.get_courses()
+    ic(r)
 
     j_data = []
     for _dir_id in _dir_ids:
@@ -150,9 +163,9 @@ if __name__ == '__main__':
         # answer = answer.replace('正确答案：', '')
         answer = answer.replace('正确答案：', '正确答案: ')
         answer = answer.replace('我的答案：', '')
-        print(question, answer)
+        # print(question, answer)
         text += f'{question}\n{answer}\n\n'
-    print(text)
+    # print(text)
 
     with open('out/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.text', 'w+', encoding='utf8') as f:
         f.write(text)
