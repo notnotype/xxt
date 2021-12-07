@@ -23,8 +23,8 @@ def get_uuid():
 
 class XXT:
     def __init__(self, course_id, class_id):
-        self.course_id = course_id
-        self.class_id = class_id
+        self.course_id = 220338109
+        self.class_id = 47586727
         self.default_headers = {
             'Host': 'exm-mayuan-ans.chaoxing.com',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36'
