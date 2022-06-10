@@ -2,7 +2,9 @@
 
 > 学习通题库爬虫
 
-# 快速使用
+博客：https://blog.notnotype.com/2022/03/27/%E5%AD%A6%E4%B9%A0%E9%80%9A%E9%80%86%E5%90%91/
+
+# 使用
 
 ## clone项目
 
@@ -51,8 +53,6 @@ http://i.chaoxing.com/base/cacheUserOrg
 https://exm-mayuan-ans.chaoxing.com/selftest/courses?fid=137737
 
 在一个class=infoList的ul节点中获取courseId, (ul子节点li的id为courseId)
-
-![4.png](imgs/4.png)
 
 (3)获取三个参数
 
