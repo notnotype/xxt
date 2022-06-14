@@ -1,4 +1,5 @@
 import datetime
+import os
 import re
 import time
 import uuid
@@ -154,6 +155,8 @@ if __name__ == '__main__':
         j_data += qa
         logger.info('共 {} 个items', len(j_data))
 
+    if not os.path.exists("out/"):
+        os.mkdir("out")
     with open('out/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.json', 'w+', encoding='utf8') as f:
         f.write(dumps(j_data, indent=4, ensure_ascii=False))
     with open('out/latest.json', 'w', encoding='utf8') as f:
