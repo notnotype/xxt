@@ -137,9 +137,9 @@ class XXT:
 if __name__ == '__main__':
     # _dir_ids = [68773748]
 
-    xxt = XXT('215780579', '2546', '98652693')
-    xxt.set_cookie(
-        '_tid=76653558; sso_puid=109255777; _industry=5; fidsCount=3; k8s=bd0734ff408fe052a7df7557586b72e1a4822de8; route=36ef5ecbfa418bb6fd1c82c50e9f0066; schoolId=28948; examinationRole=8930d67295f8174b1469b2760b06a181; lv=2; fid=28948; _uid=109255777; UID=109255777; vc=43D57B2F0862A3BE50B0A7D5A7EF36F7; xxtenc=7cec5c59032021221fac4a42fb2f685b; jrose=BC228CCB7C7BD719F2E4822DF066CECB.self-exam-system-3661515132-4k7t2; uf=da0883eb5260151ed8722d802b2f755939c33fa9270a6a53cb316d38e6bde71a10c1943b3809c41e04f68592bfcd5b39dc436c455fddffc288b83130e7eb47045be6cb53ca92c59efd68be96b6183b1a7a5853460b99e4b1e71de711cfced6a4cbb59410137500e5; _d=1640838192883; vc2=0E6DD14E13562548AAB5DF0F0DEAA16C; vc3=a3BPmh3MNOPr5WnuovoymGQY9Zbgt6CqPMAIY56krplZfarL%2BXScJGdp6hctnsZw8sIRLqDE7s6O616LinbUUT6KuGvAkiCJBLdnzQjEIziQSGwAxYlV6q0TvMWbhW0L%2BnyXEnOZ%2FfkfGytW47%2FWsfOy8wpUrj6%2Bz7y0MM2NKmo%3Da3b8e0b9d91027fdae83fd3c3583867c; DSSTASH_LOG=C_38-UN_55-US_109255777-T_1640838192885; KI4SO_SERVER_EC=RERFSWdRQWdsckNwckxwM2pXeFFSYm56cm9PN0FsM0pxNlJDVHAwY0VEVEFlcGQ0ZzI0MDJ1MHd4%0AQUZDOXpKeERtU2djWlRjU2NTVQp1NG13bWtscWxXdHBSbWxzZ0RXMEsvcy9TR0FMVHlBN3dlclJt%0ARDFtdWE0OVd4bXBHSTZobzIwWGJJR3JZd3B1cGJ0Zmdqd0ZqRWxPCjhKbkRyZHlUMEZ6WTZTRkxz%0AYmo4cjhzaFI5NncrdUdhMzl1cDR3V0NMYUpXOFk5bERvRG9ZODA4d002UEFoQkw1NWZMR1hYd3Rm%0AL3EKRXNpYXFmR0wrQzFVYXZZaytuamcwOGNodEJGR3IzZytOak1OQjlWRWxidWRBcXhLMHVkVkxF%0AUzNib2JiNDhLeU1RM0QweDFZRjkxMwpLTGRvZVpzQm9Kbis2Y3p2RVlEaU5ndnM0aHJqd3JJeERj%0AUFRIWXo3bi9oazJ0cm4zMmx1ZDJMSXkyK0pCRUFOSExFbndPUENzakVOCnc5TWRXQmZkZHlpM2FI%0AbjJGNzVlK2RHZW1ub3dVUVVJYWRoZXJJdVJhVUp6bjVycU5SYzlCa3U2blFuMDh2VEgzbHJuP2Fw%0AcElkPTEma2V5SWQ9MQ%3D%3D; EXAM_FID=137737')
+    # xxt = XXT('215780579', '2546', '98652693')
+    xxt = XXT('221775430', '5952', '154457568')  # 毛泽东思想和中国特色社会主义理论体系概论
+    xxt.set_cookie('source=""; lv=2; fid=1821; _uid=152804638; uf=b2d2c93beefa90dcd1ee03ad65e10855002362bacce7629380f5a15178273ea351003e8a2ec1803d71dd6991d88d6874913b662843f1f4ad6d92e371d7fdf6446ece1d9f47db742bce71fc6e59483dd37a48b563e48d11a1969a3093fc9ab8cd284ae521b46d3af3; _d=1655441189645; UID=152804638; vc=A36411C8D18DADE1DECFFC4CD2769FF4; vc2=E2E094C63B595E0E1DF3ADEFA689E679; vc3=FtAWe8ZX8VEJ%2FyxG6NFtj8QLUDrStroFXokiDT93PQ%2Fj%2BfF2dTAAd%2F9Bi3zcgakwajpT03HKOC7uruidUiy4DR3Q3Pa9D7S0%2BAlxntB9m4UePtRWr7Mun6905I0mej2pm17NOHtIQhBRD6mWJvGtECqDY5U9qbcy6zm0%2BYwfd%2F8%3D75b711830e07d638d597e7877c323cf6; xxtenc=de8eca84b06e70aa09b24f2cc43d95b2; DSSTASH_LOG=C_38-UN_55-US_152804638-T_1655441189647; spaceFid=1821; spaceRoleId=""; k8s=a9842f22e858ecaaffe41d3449c642650d234086; jrose=9B64C1FE8E6B6324B467DDF1AEE0649B.self-exam-system-2964081028-01ch8; EXAM_FID=137737; route=ce3aca120f3fcc9eb76807ea1ee5aae1')
     # xxt.get_class_id()
     _dir_ids = xxt.get_test_ids()
 
@@ -170,11 +170,11 @@ if __name__ == '__main__':
         # answer = answer.replace('正确答案：', '')
         answer = answer.replace('正确答案：', '正确答案: ')
         answer = answer.replace('我的答案：', '')
-        print(question, answer)
+        # print(question, answer)
         text += f'{question}\n{answer}\n\n'
-    print(text)
+    # print(text)
 
-    with open('out/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.text', 'w+', encoding='utf8') as f:
+    with open('out/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.txt', 'w+', encoding='utf8') as f:
         f.write(text)
-    with open('out/latest.text', 'w', encoding='utf8') as f:
+    with open('out/latest.txt', 'w', encoding='utf8') as f:
         f.write(text)

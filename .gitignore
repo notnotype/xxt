@@ -26,7 +26,6 @@ share/python-wheels/
 .installed.cfg
 *.egg
 .idea
-spider/resource/
 MANIFEST
 
 # PyInstaller
@@ -125,3 +124,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+out/*
+out/

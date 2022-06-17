@@ -70,6 +70,12 @@ https://exm-mayuan-ans.chaoxing.com/selftest/mode?courseId=215780579
 xxt = XXT('215780579', '2546', '98652693')
 ```
 
+## 填入cookies
+
+```python
+xxt.set_cookie(<cookies>)
+```
+
 ## 运行
 
 命令行输入`python main.py`来运行
