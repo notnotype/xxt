@@ -11,6 +11,7 @@
 ```shell
 git clone https://www.github.com/notnotype/xxt.git
 cd xxt
+```
 
 ## 安装依赖
 
