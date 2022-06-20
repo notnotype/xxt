@@ -135,7 +135,7 @@ class XXT:
         }
         resp = self.post(api, data=data)
         resp.raise_for_status()
-        loguru.debug(resp.json())
+        logger.debug(resp.json())
         cookies = ''
         for k, v in self.client.cookies.get_dict().items():
             cookies += f'{k}={v}; '
@@ -151,6 +151,13 @@ class XXT:
         return result
     
     def crawl_course(self, course_id):
+        courses = xxt.get_schools()
+        course_name = 'unknown_course'
+        for school_id, school_name in courses:
+                for _course_id, _course_name in xxt.get_courses(school_id):
+                    if _course_id == course_id:
+                        course_name = _course_name[:10]
+
         api = f'https://exm-mayuan-ans.chaoxing.com/selftest/mode?courseId={course_id}'
         resp = self.get(api)
         resp.raise_for_status()
@@ -170,11 +177,13 @@ class XXT:
             j_data += qa
             logger.info('共 {} 个items', len(j_data))
 
+        now_str = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M')
+
         if not os.path.exists("out/"):
             os.mkdir("out")
-        with open('out/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.json', 'w+', encoding='utf8') as f:
+        with open(f'out/{course_name}({course_id})-{now_str}.json', mode='w', encoding='utf8') as f:
             f.write(dumps(j_data, indent=4, ensure_ascii=False))
-        with open('out/latest.json', 'w', encoding='utf8') as f:
+        with open(f'out/{course_name}({course_id})-latest.json', mode='w', encoding='utf8') as f:
             f.write(dumps(j_data, indent=4, ensure_ascii=False))
 
         text = ''
@@ -186,9 +195,9 @@ class XXT:
             answer = answer.replace('我的答案：', '')
             text += f'{question}\n{answer}\n\n'
 
-        with open('out/' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.txt', 'w+', encoding='utf8') as f:
+        with open(f'out/{course_name}({course_id})-{now_str}.txt', mode='w', encoding='utf8') as f:
             f.write(text)
-        with open('out/latest.txt', 'w', encoding='utf8') as f:
+        with open(f'out/{course_name}({course_id})-latest.txt', mode='w', encoding='utf8') as f:
             f.write(text)
 
 if __name__ == '__main__':
