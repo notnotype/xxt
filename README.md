@@ -30,3 +30,7 @@ python main.py
 # 声明
 
 请勿将此项目用于除学习以外的其他用途
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=notnotype/xxt&type=Date)](https://star-history.com/#notnotype/xxt&Date)
