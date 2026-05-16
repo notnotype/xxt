@@ -54,4 +54,4 @@ def login() -> str:
 
 
 if __name__ == '__main__':
-    print(auth())
+    print(login())

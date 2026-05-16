@@ -1,4 +1,5 @@
 import datetime
+import getpass
 import os
 import re
 import time
@@ -6,17 +7,14 @@ import uuid
 from functools import wraps
 from json import dumps
 from typing import Dict
-import loguru
 
 import requests
-from icecream import ic
 from loguru import logger
 from lxml.etree import HTML
-from requests import Session, HTTPError
+from requests import Session
 from requests.cookies import cookiejar_from_dict
 from Crypto.Cipher import DES
 from Crypto.Util.Padding import pad
-from icecream import ic
 
 RED = '\033[31m'
 BLUE = '\033[34m'
@@ -40,6 +38,7 @@ class XXT:
         }
         self.client = Session()
         self.proxies = {}
+        self.timeout = 15
 
     def set_proxies(self, proxies: Dict):
         self.proxies = proxies
@@ -50,6 +49,7 @@ class XXT:
         temp_headers.update(kwargs['headers'] if 'headers' in kwargs else {})
         kwargs['headers'] = temp_headers
         kwargs.setdefault('proxies', self.proxies)
+        kwargs.setdefault('timeout', self.timeout)
         return self.client.get(url, **kwargs)
 
     @wraps(requests.post)
@@ -58,12 +58,17 @@ class XXT:
         temp_headers.update(kwargs['headers'] if 'headers' in kwargs else {})
         kwargs['headers'] = temp_headers
         kwargs.setdefault('proxies', self.proxies)
+        kwargs.setdefault('timeout', self.timeout)
         return self.client.post(url, **kwargs)
 
     def set_cookie(self, cookies: str):
         cookies_dict = {}
         for cookie in cookies.strip().split(';'):
-            k, v = cookie.strip().split('=')
+            if not cookie.strip() or '=' not in cookie:
+                continue
+            k, v = cookie.strip().split('=', 1)
+            if not k:
+                continue
             cookies_dict[k.strip()] = v.strip()
         self.default_headers['Cookie'] = cookies
         self.client.cookies = cookiejar_from_dict(cookies_dict, self.client.cookies, True)
@@ -72,7 +77,10 @@ class XXT:
         url = 'https://exm-mayuan-ans.chaoxing.com/selftest/start-test' \
               f'?courseId={course_id}&classId={class_id}&cpi={cpi}&dirid={dir_id}&reset=true&protocol_v=1'
         resp = self.get(url)
+        resp.raise_for_status()
         result = re.search('examId=(.*?)&', resp.text, re.I)
+        if not result:
+            raise RuntimeError(f'未能获取 examId，dir_id={dir_id}')
         return result.group(1)
 
     def get_answer_url(self, course_id, class_id, cpi, exam_id):
@@ -82,6 +90,7 @@ class XXT:
 
     def get_question_answers(self, answer_url):
         resp = self.get(answer_url)
+        resp.raise_for_status()
         html = HTML(resp.text)
         zm_boxs = html.xpath('//div[@class="zm_box bgColor"]')
         zr_bgs = html.xpath('//div[@class="zr_bg"]')
@@ -123,7 +132,7 @@ class XXT:
             pad_pkcs7 = pad(text.encode(), DES.block_size, style='pkcs7')
             des = DES.new(key, DES.MODE_ECB)
             return des.encrypt(pad_pkcs7).hex()
-        api = f'http://passport2.chaoxing.com/fanyalogin'
+        api = 'http://passport2.chaoxing.com/fanyalogin'
         data = {
             'fid': '-1',
             'uname': username,
@@ -135,7 +144,10 @@ class XXT:
         }
         resp = self.post(api, data=data)
         resp.raise_for_status()
-        logger.debug(resp.json())
+        result = resp.json()
+        logger.debug(result)
+        if not result.get('status'):
+            raise RuntimeError(result.get('msg2') or result.get('mes') or '登录失败')
         cookies = ''
         for k, v in self.client.cookies.get_dict().items():
             cookies += f'{k}={v}; '
@@ -151,20 +163,24 @@ class XXT:
         return result
     
     def crawl_course(self, course_id):
-        courses = xxt.get_schools()
+        courses = self.get_schools()
         course_name = 'unknown_course'
         for school_id, school_name in courses:
-                for _course_id, _course_name in xxt.get_courses(school_id):
-                    if _course_id == course_id:
-                        course_name = _course_name[:10]
+            for _course_id, _course_name in self.get_courses(school_id):
+                if _course_id == course_id:
+                    course_name = _course_name[:10]
 
         api = f'https://exm-mayuan-ans.chaoxing.com/selftest/mode?courseId={course_id}'
         resp = self.get(api)
         resp.raise_for_status()
         html = HTML(resp.text)
 
-        class_id = html.xpath('//input[@name="classId"]/@value')[0]
-        cpi = html.xpath('//input[@name="cpi"]/@value')[0]
+        class_ids = html.xpath('//input[@name="classId"]/@value')
+        cpis = html.xpath('//input[@name="cpi"]/@value')
+        if not class_ids or not cpis:
+            raise RuntimeError(f'未能获取课程参数，course_id={course_id}')
+        class_id = class_ids[0]
+        cpi = cpis[0]
 
         _dir_ids = self.get_test_ids(course_id, class_id, cpi, )
 
@@ -177,7 +193,7 @@ class XXT:
             j_data += qa
             logger.info('共 {} 个items', len(j_data))
 
-        now_str = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M')
+        now_str = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')
 
         if not os.path.exists("out/"):
             os.mkdir("out")
@@ -189,7 +205,7 @@ class XXT:
         text = ''
         for each in j_data:
             question, answer = each
-            question = re.subn('([a-zA-Z]).', '\n\g<1>: ', question)[0]
+            question = re.subn(r'([a-zA-Z])\.', r'\n\1: ', question)[0]
             question = re.subn('[0-9]*、', '', question)[0]
             answer = answer.replace('正确答案：', '正确答案: ')
             answer = answer.replace('我的答案：', '')
@@ -202,7 +218,7 @@ class XXT:
 
 if __name__ == '__main__':
     username = input('输入手机号: ')
-    password = input('输入密码: ')
+    password = getpass.getpass('输入密码: ')
     xxt = XXT()
     xxt.login(username, password)
     
