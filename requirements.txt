@@ -2,3 +2,4 @@ lxml~=4.6.2
 requests~=2.25.1
 loguru~=0.5.3
 pycryptodome
+openpyxl~=3.1
